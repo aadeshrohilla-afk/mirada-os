@@ -3,18 +3,22 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 
-const ROLE_LABELS = {
-  admin: "Admin", merchandiser: "Merchandiser", designer: "Designer",
-  rd_executive: "R&D Executive", embroidery_executive: "Embroidery Executive", management: "Management",
-};
+const ROLE_LABELS = { admin: "Admin", merchandiser: "Merchandiser", designer: "Designer", rd_executive: "R&D Executive", embroidery_executive: "Embroidery Executive", management: "Management" };
 
 export default async function DashboardLayout({ children }) {
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-
   const { data: profile } = await supabase.from("profiles").select("full_name, role").eq("id", user.id).single();
   const role = profile?.role;
+
+  const navLinks = [
+    { href: "/dashboard/queries", label: "Queries", show: true },
+    { href: "/dashboard/samples", label: "Samples", show: ["admin","designer","management","merchandiser"].includes(role) },
+    { href: "/dashboard/cost-sheets", label: "Cost Sheets", show: ["admin","rd_executive","merchandiser","management"].includes(role) },
+    { href: "/dashboard/pcm", label: "PCM", show: ["admin","rd_executive","embroidery_executive","management"].includes(role) },
+    { href: "/dashboard/users", label: "Users", show: role === "admin" },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -22,22 +26,13 @@ export default async function DashboardLayout({ children }) {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-6">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-mirada-purple text-white flex items-center justify-center font-bold">M</div>
-            <div>
-              <div className="text-sm font-bold text-slate-900 leading-none">Mirada OS</div>
-              <div className="text-xs text-slate-500 leading-none mt-0.5">Promise Portal &amp; Design Room</div>
-            </div>
+            <div><div className="text-sm font-bold leading-none">Mirada OS</div><div className="text-xs text-slate-500 leading-none mt-0.5">Promise Portal &amp; Design Room</div></div>
           </Link>
-
           <nav className="hidden md:flex items-center gap-1 flex-1 ml-4">
-            <Link href="/dashboard" className="text-sm text-slate-600 hover:text-mirada-purple px-3 py-1.5 rounded-lg hover:bg-slate-50">Home</Link>
-            <Link href="/dashboard/queries" className="text-sm text-slate-600 hover:text-mirada-purple px-3 py-1.5 rounded-lg hover:bg-slate-50">Queries</Link>
+            {navLinks.filter(l=>l.show).map(l => (<Link key={l.href} href={l.href} className="text-sm text-slate-600 hover:text-mirada-purple px-3 py-1.5 rounded-lg hover:bg-slate-50">{l.label}</Link>))}
           </nav>
-
           <div className="flex items-center gap-4 shrink-0">
-            <div className="text-right">
-              <div className="text-sm font-medium text-slate-900">{profile?.full_name || user.email}</div>
-              <div className="text-xs text-slate-500">{user.email}{role ? ` · ${ROLE_LABELS[role] || role}` : ""}</div>
-            </div>
+            <div className="text-right"><div className="text-sm font-medium">{profile?.full_name || user.email}</div><div className="text-xs text-slate-500">{user.email}{role ? ` · ${ROLE_LABELS[role] || role}` : ""}</div></div>
             <SignOutButton />
           </div>
         </div>
