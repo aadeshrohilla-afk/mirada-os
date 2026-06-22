@@ -17,6 +17,7 @@ export default async function DashboardLayout({ children }) {
     { href: "/dashboard/samples", label: "Samples", show: ["admin","designer","management","merchandiser"].includes(role) },
     { href: "/dashboard/cost-sheets", label: "Cost Sheets", show: ["admin","rd_executive","merchandiser","management"].includes(role) },
     { href: "/dashboard/pcm", label: "PCM", show: ["admin","rd_executive","embroidery_executive","management"].includes(role) },
+    { href: "/dashboard/reference", label: "Reference Data", show: role === "admin" },
     { href: "/dashboard/users", label: "Users", show: role === "admin" },
   ];
 
@@ -28,7 +29,7 @@ export default async function DashboardLayout({ children }) {
             <div className="w-8 h-8 rounded-lg bg-mirada-purple text-white flex items-center justify-center font-bold">M</div>
             <div><div className="text-sm font-bold leading-none">Mirada OS</div><div className="text-xs text-slate-500 leading-none mt-0.5">Promise Portal &amp; Design Room</div></div>
           </Link>
-          <nav className="hidden md:flex items-center gap-1 flex-1 ml-4">
+          <nav className="hidden md:flex items-center gap-1 flex-1 ml-4 flex-wrap">
             {navLinks.filter(l=>l.show).map(l => (<Link key={l.href} href={l.href} className="text-sm text-slate-600 hover:text-mirada-purple px-3 py-1.5 rounded-lg hover:bg-slate-50">{l.label}</Link>))}
           </nav>
           <div className="flex items-center gap-4 shrink-0">
