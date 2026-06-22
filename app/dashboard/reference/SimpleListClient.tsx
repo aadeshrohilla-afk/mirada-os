@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { addSimple, deleteSimple, toggleSimple } from "./actions";
 
-export default function SimpleListClient({ rows, label, addAction, deleteAction, toggleAction }) {
+export default function SimpleListClient({ rows, label, table }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [err, setErr] = useState(null);
@@ -11,19 +12,19 @@ export default function SimpleListClient({ rows, label, addAction, deleteAction,
     e.preventDefault();
     setErr(null);
     if (!name.trim()) return;
-    const r = await addAction(name.trim());
+    const r = await addSimple(table, name.trim());
     if (r.error) return setErr(r.error);
     setName("");
     router.refresh();
   }
   async function del(id) {
     if (!confirm("Delete this entry?")) return;
-    const r = await deleteAction(id);
+    const r = await deleteSimple(table, id);
     if (r.error) return alert(r.error);
     router.refresh();
   }
   async function toggle(id, active) {
-    const r = await toggleAction(id, active);
+    const r = await toggleSimple(table, id, active);
     if (r.error) return alert(r.error);
     router.refresh();
   }
