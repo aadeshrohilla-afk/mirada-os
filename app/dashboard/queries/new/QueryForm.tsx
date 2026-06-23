@@ -3,11 +3,18 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createQuery } from "./actions";
 
-function findMatch(rules, { customer, productType }) {
+function findMatch(rules, { customer, productType, theme }) {
   if (!rules || rules.length === 0) return null;
+  // Match on customer, product, AND license_name (Theme in our form). Most specific wins.
   const matches = rules
-    .filter(r => (!r.customer_name || r.customer_name === customer) && (!r.product_type || r.product_type === productType))
-    .map(r => ({ ...r, specificity: (r.customer_name ? 2 : 0) + (r.product_type ? 1 : 0) }))
+    .filter(r =>
+      (!r.customer_name || r.customer_name === customer) &&
+      (!r.product_type || r.product_type === productType) &&
+      (!r.license_name || r.license_name === theme)
+    )
+    .map(r => ({ ...r,
+      specificity: (r.customer_name ? 4 : 0) + (r.license_name ? 2 : 0) + (r.product_type ? 1 : 0)
+    }))
     .sort((a, b) => b.specificity - a.specificity || (a.priority || 99) - (b.priority || 99));
   return matches[0] || null;
 }
@@ -26,7 +33,7 @@ export default function QueryForm({ currentUserId, currentUserRole, currentUserP
 
   function update(field, value) { setForm((f) => ({ ...f, [field]: value })); }
 
-  const matched = useMemo(() => findMatch(designerMap, { customer: form.customer_name, productType: form.product_type }), [designerMap, form.customer_name, form.product_type]);
+  const matched = useMemo(() => findMatch(designerMap, { customer: form.customer_name, productType: form.product_type, theme: form.theme }), [designerMap, form.customer_name, form.product_type, form.theme]);
   const matchedDesigner = matched ? designers.find(d => d.id === matched.designer_id) : null;
   const effectiveDesignerId = form.override_designer ? form.assigned_designer_id : (matched?.designer_id || form.assigned_designer_id);
 
@@ -71,7 +78,7 @@ export default function QueryForm({ currentUserId, currentUserRole, currentUserP
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div><label className={label}>Customer *</label><select required value={form.customer_name} onChange={(e) => update("customer_name", e.target.value)} className={input}><option value="">Select customer...</option>{customers.map((c) => (<option key={c.id} value={c.name}>{c.name}</option>))}</select></div>
         <div><label className={label}>Product Type *</label><select required value={form.product_type} onChange={(e) => update("product_type", e.target.value)} className={input}><option value="">Select product type...</option>{productTypes.map((p) => (<option key={p.id} value={p.name}>{p.name}</option>))}</select></div>
-        <div><label className={label}>Theme</label><select value={form.theme} onChange={(e) => update("theme", e.target.value)} className={input}><option value="">(none)</option>{themes.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}</select></div>
+        <div><label className={label}>Theme / License</label><select value={form.theme} onChange={(e) => update("theme", e.target.value)} className={input}><option value="">(none)</option>{themes.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}</select></div>
         <div><label className={label}>Item Name</label><input type="text" value={form.item_name} onChange={(e) => update("item_name", e.target.value)} className={input} placeholder="e.g. Marvel Tee" /></div>
         <div><label className={label}>Quantity *</label><input type="number" required min="1" value={form.quantity} onChange={(e) => update("quantity", e.target.value)} className={input} /></div>
         <div><label className={label}>Sampling Required *</label><select required value={form.sampling_required} onChange={(e) => update("sampling_required", e.target.value)} className={input}><option value="yes">Yes</option><option value="no">No</option></select></div>
@@ -84,11 +91,11 @@ export default function QueryForm({ currentUserId, currentUserRole, currentUserP
             {isAdmin && matched && (<label className="text-xs text-slate-600 inline-flex items-center gap-1.5"><input type="checkbox" checked={form.override_designer} onChange={(e)=>update("override_designer", e.target.checked)} />Override</label>)}
           </div>
           {!form.customer_name || !form.product_type ? (
-            <div className="text-sm text-slate-500">Pick Customer + Product Type to see who gets assigned.</div>
+            <div className="text-sm text-slate-500">Pick Customer + Product Type{designerMap.some(r=>r.license_name) ? " + Theme" : ""} to see who gets assigned.</div>
           ) : matched && matchedDesigner ? (
             <div className="text-sm"><span className="font-semibold text-mirada-purple">{matchedDesigner.full_name || matchedDesigner.email}</span><span className="text-xs text-slate-500 ml-2">via rule: {matched.customer_name || "any customer"} · {matched.product_type || "any product"}{matched.license_name ? ` · ${matched.license_name}` : ""}</span></div>
           ) : (
-            <div className="text-sm text-amber-700">No matching rule. Designer will be left unassigned unless you pick one below.<span className="text-xs ml-2"><a href="/dashboard/reference/designer-map" className="underline">Manage Designer Map →</a></span></div>
+            <div className="text-sm text-amber-700">No matching rule for {form.customer_name} · {form.product_type}{form.theme ? ` · ${form.theme}` : ""}. Designer will be unassigned unless you pick one below.<span className="text-xs ml-2"><a href="/dashboard/reference/designer-map" className="underline">Manage Designer Map →</a></span></div>
           )}
           {(form.override_designer || (!matched && form.customer_name && form.product_type)) && (
             <div className="mt-3">
