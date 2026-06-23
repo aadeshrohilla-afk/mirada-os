@@ -93,9 +93,9 @@ export default function QueryForm({ currentUserId, currentUserRole, currentUserP
           {!form.customer_name || !form.product_type ? (
             <div className="text-sm text-slate-500">Pick Customer + Product Type{designerMap.some(r=>r.license_name) ? " + Theme" : ""} to see who gets assigned.</div>
           ) : matched && matchedDesigner ? (
-            <div className="text-sm"><span className="font-semibold text-mirada-purple">{matchedDesigner.full_name || matchedDesigner.email}</span><span className="text-xs text-slate-500 ml-2">via rule: {matched.customer_name || "any customer"} · {matched.product_type || "any product"}{matched.license_name ? ` · ${matched.license_name}` : ""}</span></div>
+            <div className="text-sm"><span className="font-semibold text-mirada-purple">{matchedDesigner.full_name || matchedDesigner.email}</span><span className="text-xs text-slate-500 ml-2">via rule: {matched.customer_name || "any customer"} Â· {matched.product_type || "any product"}{matched.license_name ? ` Â· ${matched.license_name}` : ""}</span></div>
           ) : (
-            <div className="text-sm text-amber-700">No matching rule for {form.customer_name} · {form.product_type}{form.theme ? ` · ${form.theme}` : ""}. Designer will be unassigned unless you pick one below.<span className="text-xs ml-2"><a href="/dashboard/reference/designer-map" className="underline">Manage Designer Map →</a></span></div>
+            <div className="text-sm text-amber-700">No matching rule for {form.customer_name} Â· {form.product_type}{form.theme ? ` Â· ${form.theme}` : ""}. Designer will be unassigned unless you pick one below.{isAdmin && (<span className="text-xs ml-2"><a href="/dashboard/reference/designer-map" className="underline">Manage Designer Map →</a></span>)}</div>
           )}
           {(form.override_designer || (!matched && form.customer_name && form.product_type)) && (
             <div className="mt-3">
@@ -112,7 +112,7 @@ export default function QueryForm({ currentUserId, currentUserRole, currentUserP
 
       <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
         <button type="button" onClick={() => router.push("/dashboard/queries")} className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-medium">Cancel</button>
-        <button type="submit" disabled={saving} className="bg-mirada-purple hover:bg-mirada-purple-dark text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50">{saving ? "Creating…" : "Create Query"}</button>
+        <button type="submit" disabled={saving} className="bg-mirada-purple hover:bg-mirada-purple-dark text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50">{saving ? "Creatingâ¦" : "Create Query"}</button>
       </div>
     </form>
   );
