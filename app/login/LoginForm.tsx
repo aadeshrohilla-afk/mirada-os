@@ -16,9 +16,17 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) { setError(error.message); return; }
+    if (err) {
+      let msg = err.message || err.error_description || (typeof err === "string" ? err : "");
+      if (!msg || msg === "{}") msg = "Sign in failed.";
+      if (/invalid login credentials/i.test(msg)) {
+        msg = "Wrong email or password. If you've only ever signed in with Google before, click 'Sign in with Google' instead.";
+      }
+      setError(msg);
+      return;
+    }
     router.push("/dashboard");
     router.refresh();
   }
@@ -26,11 +34,11 @@ export default function LoginForm() {
   async function signInWithGoogle() {
     setGoogleLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (error) { setGoogleLoading(false); setError(error.message); }
+    if (err) { setGoogleLoading(false); setError(err.message || "Google sign-in failed."); }
   }
 
   return (
@@ -57,7 +65,7 @@ export default function LoginForm() {
           <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
           <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-mirada-purple" />
         </div>
-        {error && (<div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>)}
+        {error && (<div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>)}
         <button type="submit" disabled={loading} className="w-full bg-mirada-purple text-white py-2.5 rounded-lg font-medium hover:bg-mirada-purple-dark transition disabled:opacity-50">{loading ? "Signing in…" : "Sign In"}</button>
       </form>
     </div>
