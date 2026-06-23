@@ -8,6 +8,7 @@ const TABS = [
   { href: "/dashboard/reference/themes", label: "Themes" },
   { href: "/dashboard/reference/licenses", label: "Licenses & Royalty" },
   { href: "/dashboard/reference/raw-materials", label: "Raw Materials" },
+  { href: "/dashboard/reference/value-add", label: "Value-Add" },
   { href: "/dashboard/reference/process-rates", label: "Process ₹/min" },
   { href: "/dashboard/reference/label-packaging", label: "Label & Packaging" },
   { href: "/dashboard/reference/designer-map", label: "Designer Map" },
