@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import QueryForm from "./QueryForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewQueryPage() {
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,7 +28,7 @@ export default async function NewQueryPage() {
       <div className="mb-6">
         <Link href="/dashboard/queries" className="text-sm text-slate-600 hover:text-mirada-purple">&larr; Back to queries</Link>
         <h1 className="text-2xl font-bold text-slate-900 mt-2">New Query</h1>
-        <p className="text-sm text-slate-500 mt-1">Create a customer query. A query code will be generated automatically.</p>
+        <p className="text-sm text-slate-500 mt-1">Create a customer query. A query code will be generated automatically. Found {designerMapRes.data?.length || 0} designer-map rules · {designersRes.data?.length || 0} designers.</p>
       </div>
       <QueryForm
         currentUserId={user.id}
