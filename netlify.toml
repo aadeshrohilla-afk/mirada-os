@@ -1,6 +1,5 @@
 [build]
-  command = "npm run build"
-  publish = ".next"
+  publish = "."
+  command = "echo 'static deploy'"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# No Next.js plugin — this is now a single-page HTML app
