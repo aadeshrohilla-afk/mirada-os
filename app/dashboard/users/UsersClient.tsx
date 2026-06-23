@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateUserRole, updateUserPrefix, toggleUserActive, inviteUser, cancelInvite } from "./actions";
+import { updateUserRole, updateUserPrefix, toggleUserActive, inviteUser, cancelInvite, deleteUser } from "./actions";
 
 const ROLES = [{v:"admin",l:"Admin"},{v:"merchandiser",l:"Merchandiser"},{v:"designer",l:"Designer"},{v:"rd_executive",l:"R&D Executive"},{v:"embroidery_executive",l:"Embroidery Executive"},{v:"management",l:"Management"}];
 
@@ -21,13 +21,16 @@ export default function UsersClient({ users, invites, currentUserId }) {
     const r = await inviteUser({ ...invite, invited_by: currentUserId, query_code_prefix: invite.query_code_prefix.toUpperCase() });
     if (r.error) return setErr(r.error);
     setInvite({ email: "", full_name: "", role: "merchandiser", query_code_prefix: "" });
-    setShowInvite(false);
-    router.refresh();
+    setShowInvite(false); router.refresh();
   }
-
   async function dropInvite(email) {
     if (!confirm("Cancel this invite?")) return;
-    const r = await cancelInvite(email);
+    const r = await cancelInvite(email); if (r.error) return setErr(r.error); router.refresh();
+  }
+  async function delUser(id, email) {
+    if (id === currentUserId) return alert("You cannot delete yourself.");
+    if (!confirm(`Delete ${email}? This removes their account permanently. Any queries, samples, cost sheets etc. they own may also be affected.`)) return;
+    const r = await deleteUser(id);
     if (r.error) return setErr(r.error);
     router.refresh();
   }
@@ -72,7 +75,7 @@ export default function UsersClient({ users, invites, currentUserId }) {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-700">
-            <tr><th className="text-left px-4 py-3">Email</th><th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Role</th><th className="text-left px-4 py-3">Prefix</th><th className="text-left px-4 py-3">Active</th></tr>
+            <tr><th className="text-left px-4 py-3">Email</th><th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Role</th><th className="text-left px-4 py-3">Prefix</th><th className="text-left px-4 py-3">Active</th><th className="text-right px-4 py-3"></th></tr>
           </thead>
           <tbody>
             {users.map((u) => (
@@ -82,6 +85,7 @@ export default function UsersClient({ users, invites, currentUserId }) {
                 <td className="px-4 py-3"><select defaultValue={u.role || ""} onChange={(e)=>setRole(u.id, e.target.value)} className="px-2 py-1 rounded border border-slate-300 text-xs"><option value="">(none)</option>{ROLES.map((r)=>(<option key={r.v} value={r.v}>{r.l}</option>))}</select></td>
                 <td className="px-4 py-3"><input defaultValue={u.query_code_prefix || ""} onBlur={(e)=>setPrefix(u.id, e.target.value)} maxLength={4} className="px-2 py-1 rounded border border-slate-300 text-xs font-mono w-16 uppercase" /></td>
                 <td className="px-4 py-3"><label className="inline-flex items-center gap-2 text-xs"><input type="checkbox" defaultChecked={u.active} onChange={(e)=>toggleActive(u.id, e.target.checked)} />{u.active ? "Active" : "Inactive"}</label></td>
+                <td className="px-4 py-3 text-right">{u.id !== currentUserId && (<button onClick={()=>delUser(u.id, u.email)} className="text-xs text-red-600 hover:underline">Delete</button>)}</td>
               </tr>
             ))}
           </tbody>
