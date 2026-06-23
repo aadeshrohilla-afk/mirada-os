@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import SampleActions from "./SampleActions";
+import PlanSheetsList from "./PlanSheetsList";
 
 const STATUS_LABELS = { planned: "Planned", in_progress: "In Progress", review_pending: "Review Pending", approved: "Approved", rejected: "Rejected", cancelled: "Cancelled" };
 
@@ -12,15 +13,17 @@ export default async function SampleDetail({ params }) {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   const role = profile?.role;
 
-  const { data: sample } = await supabase.from("mirada_samples")
-    .select(`*, query:mirada_queries!mirada_samples_query_id_fkey(id, code, customer_name, item_name, product_type, theme, quantity), designer:profiles!mirada_samples_designer_id_fkey(full_name, email)`)
-    .eq("id", params.id).single();
+  const [{data: sample}, {data: planSheets}] = await Promise.all([
+    supabase.from("mirada_samples")
+      .select(`*, query:mirada_queries!mirada_samples_query_id_fkey(id, code, customer_name, item_name, product_type, theme, quantity), designer:profiles!mirada_samples_designer_id_fkey(full_name, email)`)
+      .eq("id", params.id).single(),
+    supabase.from("mirada_plan_sheets").select("*").eq("sample_id", params.id).order("revision", {ascending: false}),
+  ]);
   if (!sample) notFound();
-
   const isOwnerOrAdmin = sample.designer_id === user.id || role === "admin";
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <Link href="/dashboard/samples" className="text-sm text-slate-600">&larr; Back</Link>
       <div className="flex items-center justify-between mt-2 mb-6">
         <div>
@@ -29,6 +32,7 @@ export default async function SampleDetail({ params }) {
         </div>
         <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100">{STATUS_LABELS[sample.status]}</span>
       </div>
+
       <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6 space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><div className="text-xs text-slate-500">Designer</div><div>{sample.designer?.full_name}</div></div>
@@ -38,8 +42,10 @@ export default async function SampleDetail({ params }) {
         </div>
         {sample.designer_notes && (<div><div className="text-xs text-slate-500 mb-1">Designer notes</div><div className="text-sm whitespace-pre-wrap">{sample.designer_notes}</div></div>)}
         {sample.customer_feedback && (<div><div className="text-xs text-slate-500 mb-1">Customer feedback</div><div className="text-sm whitespace-pre-wrap">{sample.customer_feedback}</div></div>)}
-        {sample.review_notes && (<div><div className="text-xs text-slate-500 mb-1">Review notes</div><div className="text-sm whitespace-pre-wrap">{sample.review_notes}</div></div>)}
       </div>
+
+      <PlanSheetsList sampleId={sample.id} planSheets={planSheets || []} canEdit={isOwnerOrAdmin} />
+
       {isOwnerOrAdmin && sample.status !== "approved" && sample.status !== "cancelled" && (
         <SampleActions sampleId={sample.id} currentStatus={sample.status} />
       )}
