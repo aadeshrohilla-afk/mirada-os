@@ -8,7 +8,7 @@ export default async function NewCostSheetPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!["rd_executive","admin"].includes(profile?.role)) redirect("/dashboard/cost-sheets");
+  if (!["rd_executive","merchandiser","admin"].includes(profile?.role)) redirect("/dashboard/cost-sheets");
 
   const [{data: queries}, {data: settings}, {data: pcm}, {data: rawMaterials}, {data: valueAdd}, {data: labels}, {data: packaging}, {data: processRates}, {data: embroidery}] = await Promise.all([
     supabase.from("mirada_queries").select("id, code, customer_name, item_name, product_type, quantity").in("status", ["open","in_sampling","sample_approved","in_costing"]).order("created_at", {ascending: false}),
@@ -27,7 +27,7 @@ export default async function NewCostSheetPage() {
     <div className="max-w-6xl mx-auto">
       <Link href="/dashboard/cost-sheets" className="text-sm text-slate-600">&larr; Back</Link>
       <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">New Cost Sheet (6-Part)</h1>
-      <p className="text-sm text-slate-500 mb-6">Process → Raw Material → Value-Add → Label/Pack → OH/Profit/Royalty</p>
+      <p className="text-sm text-slate-500 mb-6">Process â Raw Material â Value-Add â Label/Pack â OH/Profit/Royalty</p>
       <CostSheetForm
         currentUserId={user.id}
         queries={queries || []}
