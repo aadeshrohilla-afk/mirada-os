@@ -12,13 +12,13 @@ export default async function NewQueryPage() {
   const role = profile?.role;
   if (role !== "merchandiser" && role !== "admin") redirect("/dashboard/queries");
 
-  // Load reference data + designer list
-  const [customersRes, productTypesRes, themesRes, designersRes, merchsRes] = await Promise.all([
+  const [customersRes, productTypesRes, themesRes, designersRes, merchsRes, designerMapRes] = await Promise.all([
     supabase.from("customers").select("id, name").eq("active", true).order("name"),
     supabase.from("product_types").select("id, name").eq("active", true).order("name"),
     supabase.from("themes").select("id, name").eq("active", true).order("name"),
     supabase.from("profiles").select("id, full_name, email").eq("role", "designer").eq("active", true).order("full_name"),
     supabase.from("profiles").select("id, full_name, email, query_code_prefix").eq("role", "merchandiser").eq("active", true).order("full_name"),
+    supabase.from("designer_map").select("id, customer_name, product_type, license_name, designer_id, priority").eq("active", true).order("priority"),
   ]);
 
   return (
@@ -37,6 +37,7 @@ export default async function NewQueryPage() {
         themes={themesRes.data || []}
         designers={designersRes.data || []}
         merchandisers={merchsRes.data || []}
+        designerMap={designerMapRes.data || []}
       />
     </div>
   );
