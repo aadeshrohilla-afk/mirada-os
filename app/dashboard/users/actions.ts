@@ -38,3 +38,9 @@ export async function cancelInvite(email) {
   if (error) return { error: error.message };
   revalidatePath("/dashboard/users"); return { ok: true };
 }
+export async function deleteUser(id) {
+  const s = createServerClient();
+  const { error } = await s.rpc("admin_delete_user", { p_user_id: id });
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/users"); return { ok: true };
+}
